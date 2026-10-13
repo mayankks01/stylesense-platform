@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "fit": { "industry": 20, "region": 10, "companySize": 15, "title": 15 },
+  "engagement": { "opened": 10, "interested": 30, "needsInfo": 20, "notNow": 0, "wrongPerson": -20 },
+  "minimum": 0,
+  "maximum": 100,
+  "suppressedScore": 0
+}

@@ -15,3 +15,4 @@ data/
 private/
 *.pem
 *.key
+apps/api/src/generated/

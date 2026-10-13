@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client"
+  output = "../apps/api/src/generated/prisma"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EventType {
+  SENT
+  DELIVERED
+  OPENED
+  REPLIED
+  UNSUBSCRIBED
+}
+
+enum ReplyIntent {
+  INTERESTED
+  NEEDS_INFO
+  NOT_NOW
+  WRONG_PERSON
+  UNSUBSCRIBE
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique @db.VarChar(254)
+  name String @db.VarChar(100)
+  passwordHash String
+  createdAt DateTime @default(now())
+  sessions Session[]
+  companies Company[]
+  campaigns Campaign[]
+  suppressions Suppression[]
+}
+
+model Session {
+  tokenHash String @id @db.VarChar(64)
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  csrfToken String @db.VarChar(64)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Company {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  name String @db.VarChar(200)
+  domain String @db.VarChar(253)
+  industry String? @db.VarChar(100)
+  region String? @db.VarChar(100)
+  size Int?
+  sourceUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leads Lead[]
+  @@unique([ownerId, domain])
+  @@unique([id, ownerId])
+}
+
+model Lead {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  companyId String @db.Uuid
+  company Company @relation(fields: [companyId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  firstName String @db.VarChar(100)
+  lastName String @db.VarChar(100)
+  email String? @db.VarChar(254)
+  title String? @db.VarChar(160)
+  sourceUrl String
+  icp Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  score LeadScore?
+  history ScoreHistory[]
+  events EmailEvent[]
+  enrollments CampaignLead[]
+  @@unique([id, ownerId])
+  @@unique([ownerId, email])
+  @@index([ownerId, createdAt, id])
+}
+
+model Campaign {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  name String @db.VarChar(200)
+  description String @default("") @db.VarChar(2000)
+  icp Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leads CampaignLead[]
+  @@unique([id, ownerId])
+  @@index([ownerId, createdAt, id])
+}
+
+model CampaignLead {
+  campaignId String @db.Uuid
+  leadId String @db.Uuid
+  ownerId String @db.Uuid
+  campaign Campaign @relation(fields: [campaignId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  enrolledAt DateTime @default(now())
+  messages EmailMessage[]
+  @@id([campaignId, leadId])
+  @@unique([campaignId, leadId, ownerId])
+  @@index([leadId])
+}
+
+model EmailMessage {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  campaignId String @db.Uuid
+  leadId String @db.Uuid
+  enrollment CampaignLead @relation(fields: [campaignId, leadId, ownerId], references: [campaignId, leadId, ownerId], onDelete: Restrict)
+  recipient String @db.VarChar(254)
+  subject String
+  body String
+  provider String?
+  providerId String?
+  idempotencyKey String @db.VarChar(128)
+  createdAt DateTime @default(now())
+  events EmailEvent[]
+  @@unique([id, leadId, ownerId])
+  @@unique([ownerId, idempotencyKey])
+  @@unique([provider, providerId])
+}
+
+model EmailEvent {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  leadId String @db.Uuid
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  messageId String? @db.Uuid
+  message EmailMessage? @relation(fields: [messageId, leadId, ownerId], references: [id, leadId, ownerId], onDelete: Restrict)
+  type EventType
+  intent ReplyIntent?
+  source String @db.VarChar(100)
+  dedupeKey String @db.VarChar(128)
+  occurredAt DateTime
+  receivedAt DateTime @default(now())
+  payload Json
+  history ScoreHistory[]
+  @@unique([ownerId, source, dedupeKey])
+  @@unique([id, leadId, ownerId])
+  @@index([ownerId, leadId, occurredAt, id])
+}
+
+model LeadScore {
+  leadId String @id @db.Uuid
+  ownerId String @db.Uuid
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  total Int
+  fit Int
+  engagement Int
+  status String @db.VarChar(20)
+  configVersion String
+  updatedAt DateTime @updatedAt
+  @@unique([leadId, ownerId])
+  @@index([ownerId, total, leadId])
+}
+
+model ScoreHistory {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  leadId String @db.Uuid
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  triggerEventId String? @db.Uuid
+  triggerEvent EmailEvent? @relation(fields: [triggerEventId, leadId, ownerId], references: [id, leadId, ownerId], onDelete: Restrict)
+  previousTotal Int?
+  total Int
+  fit Int
+  engagement Int
+  status String @db.VarChar(20)
+  reason String
+  config Json
+  inputs Json
+  createdAt DateTime @default(now())
+  @@index([ownerId, leadId, createdAt, id])
+}
+
+model Suppression {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  email String @db.VarChar(254)
+  reason String
+  createdAt DateTime @default(now())
+  @@unique([ownerId, email])
+}

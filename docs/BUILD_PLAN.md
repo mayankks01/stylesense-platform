@@ -1,6 +1,6 @@
 # Staged build plan
 
-Steps 1 and 2 are complete. Stop after each step, report verification and limitations, provide GitHub commands, and await the user's instruction to continue. Do not deploy during an intermediate stage.
+Steps 1 through 3 are complete. Stop after each step, report verification and limitations, provide GitHub commands, and await the user's instruction to continue. Do not deploy during an intermediate stage.
 
 | Step | Deliverable | Verification before pausing | Suggested commit |
 | --- | --- | --- | --- |

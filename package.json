@@ -2,15 +2,34 @@
   "name": "stylesense-platform",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["apps/*"],
-  "engines": { "node": ">=22.12.0 <23 || >=24.0.0" },
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0 <23 || >=24.0.0"
+  },
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"npm run dev -w @stylesense/api\" \"npm run dev -w @stylesense/web\"",
     "build": "npm run build --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "test": "npm run test -w @stylesense/api",
     "db:up": "docker compose up -d --wait db",
-    "db:stop": "docker compose stop db"
+    "db:stop": "docker compose stop db",
+    "db:generate": "npm run db:generate -w @stylesense/api",
+    "db:migrate": "npm run db:migrate -w @stylesense/api",
+    "user:create": "npm run user:create -w @stylesense/api",
+    "test:integration": "npm run test:integration -w @stylesense/api"
   },
-  "devDependencies": { "concurrently": "^9.2.1", "typescript": "~5.9.3" }
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "~5.9.3"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "prisma": {
+      "mysql2": "3.24.6"
+    }
+  }
 }

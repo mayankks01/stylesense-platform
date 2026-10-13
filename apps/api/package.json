@@ -8,8 +8,26 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node --env-file=.env dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "db:generate": "node --env-file=.env ../../node_modules/prisma/build/index.js generate",
+    "db:migrate": "node --env-file=.env ../../node_modules/prisma/build/index.js migrate deploy",
+    "user:create": "tsx --env-file=.env src/bootstrap.ts",
+    "test:integration": "tsx --env-file=.env --test test/integration/run.ts"
   },
-  "dependencies": { "express": "^5.1.0", "helmet": "^8.1.0", "pg": "^8.16.3", "zod": "^4.1.12" },
-  "devDependencies": { "@types/express": "^5.0.3", "@types/node": "^22.18.0", "@types/pg": "^8.15.5", "tsx": "^4.20.6" }
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.1.0",
+    "pg": "^8.16.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.18.0",
+    "@types/pg": "^8.15.5",
+    "prisma": "^7.10.0",
+    "tsx": "^4.20.6"
+  }
 }

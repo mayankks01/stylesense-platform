@@ -4,13 +4,16 @@ An incremental implementation of the ThinkDatax Full Stack + AI Engineer assignm
 
 ## Current status
 
-Step 2 is complete: a React application shell, Express API, PostgreSQL development service, environment examples, and health checks. Authentication and business data begin in Step 3. No provider integration or deployment exists yet.
+Step 3 is complete: the React application shell now has an authenticated backend with PostgreSQL migrations, company/lead/campaign APIs, configurable scoring, immutable event/history records, and explicit development event simulations. The sales UI is still the Step 2 shell; login screens and the connected console arrive in Step 5. No provider integration or deployment exists yet.
 
 - [Requirements and acceptance criteria](docs/REQUIREMENTS.md)
 - [Architecture and staged build plan](docs/BUILD_PLAN.md)
 - [GitHub instructions for Step 1](docs/GITHUB.md)
+- [Step 3 verification and GitHub push commands](docs/STEP3.md)
+- [API documentation](docs/API.md)
+- [Scoring weights and replay](docs/SCORING.md)
 
-The next step is database modelling, authentication, lead/campaign APIs, and scoring. Each stage ends with verification notes and Git commit instructions, followed by a pause for review. See [Step 2 verification](docs/STEP2.md).
+The next step is grounded email rendering, sandbox sending, tracking and unsubscribe links. Each stage ends with verification notes and Git commit instructions, followed by a pause for review.
 
 ## Run locally (PowerShell)
 
@@ -23,7 +26,9 @@ npm ci
 Copy-Item .env.example .env
 Copy-Item apps/api/.env.example apps/api/.env
 Copy-Item apps/web/.env.example apps/web/.env
+npm run db:generate
 npm run db:up
+npm run db:migrate
 npm run dev
 ```
 
@@ -37,11 +42,16 @@ The database volume is persistent. Changing its password environment variable do
 npm run typecheck
 npm run build
 npm test
+npm run test:integration
 Invoke-RestMethod http://127.0.0.1:4100/api/health
 Invoke-RestMethod http://127.0.0.1:4100/api/ready
 ```
 
-`/api/health` checks the API process. `/api/ready` actually queries PostgreSQL and returns 503 if unavailable. These public endpoints expose no lead or campaign data. The database is intentionally empty until Step 3 introduces Prisma models and migrations; the lightweight `pg` query checks connectivity independently of application tables.
+`/api/health` checks the API process. `/api/ready` queries PostgreSQL and returns 503 if unavailable. These public endpoints expose no lead or campaign data. Readiness confirms connectivity, not schema migration state; always run `db:migrate` before using business endpoints.
+
+Create your own account by privately adding `BOOTSTRAP_EMAIL`, `BOOTSTRAP_NAME`, and `BOOTSTRAP_PASSWORD` (12–128 characters) to `apps/api/.env`, then running `npm run user:create`. Remove the bootstrap password afterwards. Existing accounts are never overwritten. See [API documentation](docs/API.md) for session cookies, CSRF headers, and endpoint examples. No default account or password is included.
+
+The integration test uses a unique disposable PostgreSQL schema and removes it after verification. It exercises authentication, ownership constraints, event deduplication, replay, suppression and score history without modifying application data.
 
 Stop the app with Ctrl+C. Stop this project's database without deleting its data with `npm run db:stop`. The generated frontend is in `apps/web/dist`; the compiled API is in `apps/api/dist`. `npm run start -w @stylesense/api` runs the compiled API. Production hosting and frontend serving are deferred to Step 7.
 
@@ -49,7 +59,7 @@ On Windows, if PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`; no 
 
 ## Planned stack
 
-React with TypeScript and Vite for the console; Node.js with TypeScript and Express for the REST API; PostgreSQL with Prisma migrations for relational storage. A single TypeScript language across the application reduces switching overhead. Server sessions will protect application data. External email, search, and LLM services will sit behind interfaces with explicit mock modes.
+React with TypeScript and Vite for the console; Node.js with TypeScript and Express for the REST API; PostgreSQL with Prisma 7 migrations and the PostgreSQL driver adapter for relational storage. A single TypeScript language across the application reduces switching overhead. Database-backed cookie sessions protect application data. The Prisma setup follows its [client configuration](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) and [PostgreSQL adapter](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/postgresql) documentation. External email, search, and LLM services will sit behind interfaces with explicit mock modes.
 
 ## Scope decisions
 

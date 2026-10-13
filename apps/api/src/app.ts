@@ -1,8 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import express, { type ErrorRequestHandler } from 'express';
 import helmet from 'helmet';
+import { ZodError } from 'zod';
+import type { Database } from './db.js';
+import { auth, type AuthOptions } from './auth.js';
+import { businessRoutes } from './routes.js';
+import { ApiError } from './errors.js';
 
-export function createApp(checkDatabase: () => Promise<void>) {
+export function createApp(checkDatabase: () => Promise<void>, db?: Database, options: AuthOptions = { appOrigin: 'http://127.0.0.1:5180', production: false, allowSimulatedEvents: false }) {
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());
@@ -24,10 +29,29 @@ export function createApp(checkDatabase: () => Promise<void>) {
       res.status(503).json({ error: { code: 'DATABASE_UNAVAILABLE', message: 'Database is unavailable.', requestId: res.locals.requestId } });
     }
   });
+  if (db) {
+    const authentication = auth(db, options);
+    app.use('/api/auth', authentication.router);
+    app.use('/api', authentication.requireOrigin, authentication.requireSession, businessRoutes(db, options.allowSimulatedEvents && !options.production));
+  }
   app.use((_req, res) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found.', requestId: res.locals.requestId } });
   });
   const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, _next) => {
+    if (error instanceof ApiError) {
+      res.status(error.status).json({ error: { code: error.code, message: error.message, requestId: res.locals.requestId } });
+      return;
+    }
+    if (error instanceof ZodError) {
+      res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Request validation failed.', fields: error.issues.map(issue => ({ path: issue.path.join('.'), message: issue.message })), requestId: res.locals.requestId } });
+      return;
+    }
+    const databaseCode = typeof error === 'object' && error !== null && 'code' in error ? error.code : '';
+    if (['P2002', 'P2003', 'P2025', 'P2034'].includes(String(databaseCode))) {
+      const status = databaseCode === 'P2025' ? 404 : 409;
+      res.status(status).json({ error: { code: status === 404 ? 'NOT_FOUND' : 'CONFLICT', message: status === 404 ? 'Resource not found.' : 'The request conflicts with existing data. Refresh and try again.', requestId: res.locals.requestId } });
+      return;
+    }
     const type = typeof error === 'object' && error !== null && 'type' in error ? error.type : '';
     const status = type === 'entity.parse.failed' ? 400 : type === 'entity.too.large' ? 413 : 500;
     res.status(status).json({ error: {
