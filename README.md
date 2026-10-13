@@ -4,13 +4,48 @@ An incremental implementation of the ThinkDatax Full Stack + AI Engineer assignm
 
 ## Current status
 
-Step 1 is complete: requirements and implementation plan. No application, database, provider integration, or deployment exists yet.
+Step 2 is complete: a React application shell, Express API, PostgreSQL development service, environment examples, and health checks. Authentication and business data begin in Step 3. No provider integration or deployment exists yet.
 
 - [Requirements and acceptance criteria](docs/REQUIREMENTS.md)
 - [Architecture and staged build plan](docs/BUILD_PLAN.md)
 - [GitHub instructions for Step 1](docs/GITHUB.md)
 
-The next step is project setup. Each stage will end with verification notes and its own Git commit instructions, followed by a pause for review.
+The next step is database modelling, authentication, lead/campaign APIs, and scoring. Each stage ends with verification notes and Git commit instructions, followed by a pause for review. See [Step 2 verification](docs/STEP2.md).
+
+## Run locally (PowerShell)
+
+Prerequisites: Node.js 22.12+ within the 22 release line, or Node.js 24+, npm, and Docker Desktop running Linux containers. Vite's [Node requirements](https://vite.dev/guide/) and [Express 5 requirements](https://expressjs.com/en/guide/migrating-5/) inform the baseline. The lockfile pins installed dependency versions.
+
+From this repository folder, on first setup:
+
+```powershell
+npm ci
+Copy-Item .env.example .env
+Copy-Item apps/api/.env.example apps/api/.env
+Copy-Item apps/web/.env.example apps/web/.env
+npm run db:up
+npm run dev
+```
+
+Do not overwrite existing `.env` files when returning to the project. The three local environment files have already been created in the original workspace and are ignored by Git.
+
+Open http://127.0.0.1:5180. The API is at http://127.0.0.1:4100 and PostgreSQL uses host port 55433. Those ports avoid existing local services. The frontend proxies `/api` to the API; no cross-origin setup is needed for development. If you change the API port, update `apps/web/.env` too. If you change the database settings, update `apps/api/.env` to match the root `.env`.
+
+The database volume is persistent. Changing its password environment variable does not change a password already initialized in that volume. Do not delete volumes containing data to resolve a configuration issue.
+
+```powershell
+npm run typecheck
+npm run build
+npm test
+Invoke-RestMethod http://127.0.0.1:4100/api/health
+Invoke-RestMethod http://127.0.0.1:4100/api/ready
+```
+
+`/api/health` checks the API process. `/api/ready` actually queries PostgreSQL and returns 503 if unavailable. These public endpoints expose no lead or campaign data. The database is intentionally empty until Step 3 introduces Prisma models and migrations; the lightweight `pg` query checks connectivity independently of application tables.
+
+Stop the app with Ctrl+C. Stop this project's database without deleting its data with `npm run db:stop`. The generated frontend is in `apps/web/dist`; the compiled API is in `apps/api/dist`. `npm run start -w @stylesense/api` runs the compiled API. Production hosting and frontend serving are deferred to Step 7.
+
+On Windows, if PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`; no execution-policy change is necessary.
 
 ## Planned stack
 
