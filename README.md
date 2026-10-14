@@ -211,7 +211,6 @@ GDPR/CAN-SPAM considerations include consent, sender identity, opt-out, suppress
 ## Known limitations and next steps
 
 - **Live verification remains pending:** no verified 5–10 lead OpenAI/Tavily discovery run, live classification evaluation, or real Resend sandbox send/public callback is included. Mock behavior and results are labelled explicitly.
-- **Recording:** a recording guide is included, but the required demo video/link is not yet included in this repository.
 - **Deployment:** a [deployment runbook](docs/DEPLOYMENT.md) is provided; public hosting has not been performed. The compiled frontend is in `apps/web/dist`, and `npm run start -w @stylesense/api` runs the compiled API.
 - **Reply handling:** approval stores reviewed text only. Inbound email ingestion and sending approved response drafts are not implemented. Reply simulation is available in development and disabled in production.
 - **Operational scope:** rate limits are in memory; no password recovery, shared rate-limit store or background job queue is included. A pg overlapping-query deprecation warning remains, although current tests pass.
@@ -224,5 +223,3 @@ With more time, the priority would be live-provider verification and the recorde
 - [Scoring, event ordering and replay](docs/SCORING.md)
 - [Email rendering, delivery and suppression](docs/EMAIL.md)
 - [Discovery, provenance and reply review](docs/ASSISTANCE.md)
-- [Detailed verification record](docs/STEP7.md)
-- [Assignment acceptance checklist](docs/REQUIREMENTS.md)
