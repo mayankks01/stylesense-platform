@@ -17,7 +17,7 @@ Run `npm run db:up`, `npm run db:migrate`, and `npm run dev`; open http://127.0.
 | 2:30–3:15 | Replies: enter “Interested. Let's schedule a call.” Classify; inspect the draft, edit it, and choose Approve draft without sending. Explain that approval is stored but no response is transmitted. |
 | 3:15–3:45 | Return to Leads, refresh, show score and rank. With all fit fields matched: fit 60 + open 10 + interested 30 = 100. Show immutable events and score history. |
 | 3:45–4:15 | Simulate “Please unsubscribe me.” Show suppression, score zero and blocked future sends. |
-| 4:15–4:45 | Show `examples/EMAILS.md`, the unsupported-claim rejection check, evaluation result (8/8 mock smoke examples), and the remaining live-provider/deployment checks in STEP7.md. |
+| 4:15–4:45 | Show `examples/EMAILS.md`, the unsupported-claim rejection check, evaluation result (8/8 mock smoke examples), and the remaining live-provider/deployment limitations in README.md. |
 
 ## Live demonstration gate
 
