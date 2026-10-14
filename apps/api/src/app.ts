@@ -6,18 +6,22 @@ import type { Database } from './db.js';
 import { auth, type AuthOptions } from './auth.js';
 import { businessRoutes } from './routes.js';
 import { ApiError } from './errors.js';
+import { emailRoutes, publicEmailRoutes, webhookRoute } from './email/routes.js';
+import type { EmailOptions } from './email/service.js';
 
-export function createApp(checkDatabase: () => Promise<void>, db?: Database, options: AuthOptions = { appOrigin: 'http://127.0.0.1:5180', production: false, allowSimulatedEvents: false }) {
+export function createApp(checkDatabase: () => Promise<void>, db?: Database, options: AuthOptions = { appOrigin: 'http://127.0.0.1:5180', production: false, allowSimulatedEvents: false }, email?: EmailOptions) {
   const app = express();
   app.disable('x-powered-by');
-  app.use(helmet());
+  app.use(helmet({ contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': options.production ? [] : null } } }));
   app.use((_req, res, next) => {
     res.locals.requestId = randomUUID();
     res.setHeader('X-Request-Id', res.locals.requestId as string);
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
+  if (db && email) app.use('/api/webhooks', webhookRoute(db, email));
   app.use(express.json({ limit: '32kb' }));
+  if (db && email) app.use('/api/public', publicEmailRoutes(db));
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', service: 'stylesense-api' });
   });
@@ -33,6 +37,7 @@ export function createApp(checkDatabase: () => Promise<void>, db?: Database, opt
     const authentication = auth(db, options);
     app.use('/api/auth', authentication.router);
     app.use('/api', authentication.requireOrigin, authentication.requireSession, businessRoutes(db, options.allowSimulatedEvents && !options.production));
+    if (email) app.use('/api', emailRoutes(db, email));
   }
   app.use((_req, res) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found.', requestId: res.locals.requestId } });

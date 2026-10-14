@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
-import { readFileSync } from 'node:fs';
+import { applyTestMigrations } from './migrations.js';
 import test from 'node:test';
 import pg from 'pg';
 import { createApp } from '../../src/app.js';
@@ -23,9 +23,7 @@ test('PostgreSQL lifecycle: sessions, tenant boundaries, constraints, events, sc
   try {
     await connection.query(`CREATE SCHEMA "${schema}"`);
     await connection.query(`SET search_path TO "${schema}"`);
-    const sql = readFileSync(new URL('../../../../prisma/migrations/202610130001_foundation/migration.sql', import.meta.url), 'utf8');
-    // Prisma emits public schema qualification; adapt only that literal for this disposable schema.
-    await connection.query(sql.replaceAll('"public".', `"${schema}".`).replace('CREATE SCHEMA IF NOT EXISTS "public";', `CREATE SCHEMA IF NOT EXISTS "${schema}";`));
+    await applyTestMigrations(connection, schema);
     const password = 'local-integration-password-123';
     const passwordHash = await hashPassword(password);
     const a = await db.user.create({ data: { email: 'one@example.test', name: 'One', passwordHash } });

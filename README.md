@@ -4,7 +4,7 @@ An incremental implementation of the ThinkDatax Full Stack + AI Engineer assignm
 
 ## Current status
 
-Step 3 is complete: the React application shell now has an authenticated backend with PostgreSQL migrations, company/lead/campaign APIs, configurable scoring, immutable event/history records, and explicit development event simulations. The sales UI is still the Step 2 shell; login screens and the connected console arrive in Step 5. No provider integration or deployment exists yet.
+Steps 1–4 are implemented and locally verified, including email rendering, sandbox provider integration, tracking and unsubscribe. A live Resend send and public callback remain unverified pending provider configuration; see [Step 4](docs/STEP4.md). The sales UI is still the Step 2 shell; login screens and the connected console arrive in Step 5. No deployment exists yet.
 
 - [Requirements and acceptance criteria](docs/REQUIREMENTS.md)
 - [Architecture and staged build plan](docs/BUILD_PLAN.md)
@@ -12,8 +12,10 @@ Step 3 is complete: the React application shell now has an authenticated backend
 - [Step 3 verification and GitHub push commands](docs/STEP3.md)
 - [API documentation](docs/API.md)
 - [Scoring weights and replay](docs/SCORING.md)
+- [Email setup, grounding and tracking](docs/EMAIL.md)
+- [Step 4 verification and GitHub commands](docs/STEP4.md)
 
-The next step is grounded email rendering, sandbox sending, tracking and unsubscribe links. Each stage ends with verification notes and Git commit instructions, followed by a pause for review.
+The next step is the connected React sales console. Each stage ends with verification notes and Git commit instructions, followed by a pause for review.
 
 ## Run locally (PowerShell)
 
@@ -62,6 +64,8 @@ On Windows, if PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`; no 
 React with TypeScript and Vite for the console; Node.js with TypeScript and Express for the REST API; PostgreSQL with Prisma 7 migrations and the PostgreSQL driver adapter for relational storage. A single TypeScript language across the application reduces switching overhead. Database-backed cookie sessions protect application data. The Prisma setup follows its [client configuration](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) and [PostgreSQL adapter](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/postgresql) documentation. External email, search, and LLM services will sit behind interfaces with explicit mock modes.
 
 ## Scope decisions
+
+Step 4 defaults to explicit mock email mode and restricts the Resend adapter to provider test recipients. No real-person outreach is enabled. Before production, review applicable GDPR/CAN-SPAM obligations; this assignment implements identity, opt-out and suppression controls without claiming legal compliance.
 
 - Include authentication: Section 3.1 requires it, despite the conflicting no-auth statement in Section 4.
 - Finish core scope before optional queues, inbound email ingestion, click tracking, follow-up sequences, or a second database.

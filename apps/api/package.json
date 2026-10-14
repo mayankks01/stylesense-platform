@@ -12,7 +12,7 @@
     "db:generate": "node --env-file=.env ../../node_modules/prisma/build/index.js generate",
     "db:migrate": "node --env-file=.env ../../node_modules/prisma/build/index.js migrate deploy",
     "user:create": "tsx --env-file=.env src/bootstrap.ts",
-    "test:integration": "tsx --env-file=.env --test test/integration/run.ts"
+    "test:integration": "tsx --env-file=.env --test test/integration/run.ts test/integration/email.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
@@ -21,6 +21,7 @@
     "express-rate-limit": "^8.7.1",
     "helmet": "^8.1.0",
     "pg": "^8.16.3",
+    "svix": "^2.8.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

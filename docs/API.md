@@ -67,7 +67,7 @@ For local API testing only, set `ALLOW_SIMULATED_EVENTS=true` in `apps/api/.env`
 
 `type` is SENT, DELIVERED, OPENED, REPLIED, or UNSUBSCRIBED. Only REPLIED requires/allows `intent`: INTERESTED, NEEDS_INFO, NOT_NOW, WRONG_PERSON, or UNSUBSCRIBE. `occurredAt` is an optional ISO timestamp; timestamps more than one minute in the future are rejected. Deduplication keys are 8–128 characters and unique within the account and source. Same key and same input return the original event; changed input returns 409. Duplicate retries do not create score history. All simulated events have `source: simulation` and `payload.simulated: true`, appear in raw history, and affect the local score. Use disposable test leads. No provider delivery is claimed and no email is sent.
 
-Real provider event ingestion, tracking URLs, unsubscribe links and sending arrive in Step 4. A simulated unsubscribe already adds the normalized email to suppression. Correcting the email of an unsubscribed lead also suppresses the new address.
+Step 4 adds provider delivery ingestion, tracking URLs, unsubscribe links and sandbox sending; see [EMAIL.md](EMAIL.md). A simulated unsubscribe also adds the normalized email to suppression. Correcting the email of an unsubscribed lead also suppresses the new address.
 
 ## Errors
 

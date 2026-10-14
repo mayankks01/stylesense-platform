@@ -1,6 +1,6 @@
 # Staged build plan
 
-Steps 1 through 3 are complete. Stop after each step, report verification and limitations, provide GitHub commands, and await the user's instruction to continue. Do not deploy during an intermediate stage.
+Steps 1 through 4 are implemented and locally verified. Step 4's live Resend send and public callback check remain pending provider configuration; see [Step 4 verification](STEP4.md). Stop after each step, report verification and limitations, provide GitHub commands, and await the user's instruction to continue. Do not deploy during an intermediate stage.
 
 | Step | Deliverable | Verification before pausing | Suggested commit |
 | --- | --- | --- | --- |

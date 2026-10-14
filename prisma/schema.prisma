@@ -81,6 +81,8 @@ model Lead {
   history ScoreHistory[]
   events EmailEvent[]
   enrollments CampaignLead[]
+  outreachEvidence OutreachEvidence[]
+  groundingLogs GroundingLog[]
   @@unique([id, ownerId])
   @@unique([ownerId, email])
   @@index([ownerId, createdAt, id])
@@ -125,6 +127,20 @@ model EmailMessage {
   provider String?
   providerId String?
   idempotencyKey String @db.VarChar(128)
+  requestFingerprint String @default("")
+  fromAddress String @default("")
+  html String @default("")
+  unsubscribeUrl String @default("")
+  groundingSnapshot Json @default("{}")
+  leadEmailSnapshot String?
+  openTokenHash String? @unique @db.VarChar(64)
+  unsubscribeTokenHash String? @unique @db.VarChar(64)
+  sendStatus String @default("DRAFT") @db.VarChar(20)
+  attemptCount Int @default(0)
+  firstAttemptAt DateTime?
+  leaseUntil DateTime?
+  acceptedAt DateTime?
+  lastError String?
   createdAt DateTime @default(now())
   events EmailEvent[]
   @@unique([id, leadId, ownerId])
@@ -193,4 +209,31 @@ model Suppression {
   reason String
   createdAt DateTime @default(now())
   @@unique([ownerId, email])
+}
+
+model OutreachEvidence {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  leadId String @db.Uuid
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  token String @db.VarChar(100)
+  value String @db.VarChar(500)
+  sourceUrl String
+  excerpt String @db.VarChar(4000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([leadId, token])
+  @@index([ownerId, leadId])
+}
+
+model GroundingLog {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  leadId String @db.Uuid
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  token String
+  reason String
+  action String
+  createdAt DateTime @default(now())
+  @@index([ownerId, leadId, createdAt])
 }
