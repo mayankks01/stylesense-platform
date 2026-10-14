@@ -8,8 +8,10 @@ import { businessRoutes } from './routes.js';
 import { ApiError } from './errors.js';
 import { emailRoutes, publicEmailRoutes, webhookRoute } from './email/routes.js';
 import type { EmailOptions } from './email/service.js';
+import { aiRoutes } from './ai/routes.js';
+import type { AiOptions } from './ai/providers.js';
 
-export function createApp(checkDatabase: () => Promise<void>, db?: Database, options: AuthOptions = { appOrigin: 'http://127.0.0.1:5180', production: false, allowSimulatedEvents: false }, email?: EmailOptions) {
+export function createApp(checkDatabase: () => Promise<void>, db?: Database, options: AuthOptions = { appOrigin: 'http://127.0.0.1:5180', production: false, allowSimulatedEvents: false }, email?: EmailOptions, ai?: AiOptions) {
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet({ contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': options.production ? [] : null } } }));
@@ -38,6 +40,7 @@ export function createApp(checkDatabase: () => Promise<void>, db?: Database, opt
     app.use('/api/auth', authentication.router);
     app.use('/api', authentication.requireOrigin, authentication.requireSession, businessRoutes(db, options.allowSimulatedEvents && !options.production));
     if (email) app.use('/api', emailRoutes(db, email));
+    if (ai) app.use('/api', aiRoutes(db, ai));
   }
   app.use((_req, res) => {
     res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found.', requestId: res.locals.requestId } });

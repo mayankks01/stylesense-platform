@@ -1,0 +1,84 @@
+{
+  "provider": "mock",
+  "model": "deterministic-demo-v1",
+  "simulated": true,
+  "correct": 8,
+  "total": 8,
+  "accuracy": 1,
+  "limitation": "Eight hand-labelled smoke examples, not an independent production benchmark. Literal opt-outs use the safety guard before the selected classifier.",
+  "predictions": [
+    {
+      "id": "r1",
+      "expected": "INTERESTED",
+      "predicted": "INTERESTED",
+      "classifier": "mock",
+      "correct": true
+    },
+    {
+      "id": "r2",
+      "expected": "INTERESTED",
+      "predicted": "INTERESTED",
+      "classifier": "mock",
+      "correct": true
+    },
+    {
+      "id": "r3",
+      "expected": "NEEDS_INFO",
+      "predicted": "NEEDS_INFO",
+      "classifier": "mock",
+      "correct": true
+    },
+    {
+      "id": "r4",
+      "expected": "NEEDS_INFO",
+      "predicted": "NEEDS_INFO",
+      "classifier": "mock",
+      "correct": true
+    },
+    {
+      "id": "r5",
+      "expected": "NOT_NOW",
+      "predicted": "NOT_NOW",
+      "classifier": "mock",
+      "correct": true
+    },
+    {
+      "id": "r6",
+      "expected": "NOT_NOW",
+      "predicted": "NOT_NOW",
+      "classifier": "mock",
+      "correct": true
+    },
+    {
+      "id": "r7",
+      "expected": "WRONG_PERSON",
+      "predicted": "WRONG_PERSON",
+      "classifier": "mock",
+      "correct": true
+    },
+    {
+      "id": "r8",
+      "expected": "UNSUBSCRIBE",
+      "predicted": "UNSUBSCRIBE",
+      "classifier": "opt-out-guard",
+      "correct": true
+    }
+  ],
+  "confusionMatrix": {
+    "INTERESTED": {
+      "INTERESTED": 2
+    },
+    "NEEDS_INFO": {
+      "NEEDS_INFO": 2
+    },
+    "NOT_NOW": {
+      "NOT_NOW": 2
+    },
+    "WRONG_PERSON": {
+      "WRONG_PERSON": 1
+    },
+    "UNSUBSCRIBE": {
+      "UNSUBSCRIBE": 1
+    }
+  }
+}

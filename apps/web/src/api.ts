@@ -16,12 +16,12 @@ export type History = Score & { id: string; previousTotal: number | null; reason
 let csrf = '';
 export const setSessionToken = (token: string) => { csrf = token; };
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
-export async function api<T>(path: string, options: { method?: string; body?: unknown; key?: string; signal?: AbortSignal } = {}): Promise<T> {
+export async function api<T>(path: string, options: { method?: string; body?: unknown; key?: string; signal?: AbortSignal; timeoutMs?: number } = {}): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`/api${path}`, {
       method: options.method ?? 'GET', credentials: 'same-origin', cache: 'no-store',
-      signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(30000)]) : AbortSignal.timeout(30000),
+      signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(options.timeoutMs ?? 30000)]) : AbortSignal.timeout(options.timeoutMs ?? 30000),
       headers: { ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(csrf ? { 'X-CSRF-Token': csrf } : {}), ...(options.key ? { 'Idempotency-Key': options.key } : {}) },
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
     });

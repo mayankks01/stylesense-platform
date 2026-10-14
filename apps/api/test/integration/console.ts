@@ -12,6 +12,7 @@ import { createDatabase } from '../../src/db.js';
 import { hashPassword } from '../../src/auth.js';
 import { readConfig } from '../../src/config.js';
 import { MockProvider } from '../../src/email/provider.js';
+import { MockModel, MockResearch } from '../../src/ai/providers.js';
 import { applyTestMigrations } from './migrations.js';
 
 test('Connected console on a disposable PostgreSQL schema', { timeout: 180000 }, async t => {
@@ -27,7 +28,7 @@ test('Connected console on a disposable PostgreSQL schema', { timeout: 180000 },
   try {
     await connection.query(`CREATE SCHEMA "${schema}"`); await connection.query(`SET search_path TO "${schema}"`); await applyTestMigrations(connection, schema);
     await db.user.create({ data: { email: 'console@example.test', name: 'Console Test', passwordHash: await hashPassword('console-test-password') } });
-    server = createApp(async () => {}, db, { appOrigin: origin, production: false, allowSimulatedEvents: false }, { provider: new MockProvider(), publicBaseUrl: origin, from: 'StyleSense <onboarding@resend.dev>', senderName: 'Test sender', production: false }).listen(0, '127.0.0.1');
+    server = createApp(async () => {}, db, { appOrigin: origin, production: false, allowSimulatedEvents: false }, { provider: new MockProvider(), publicBaseUrl: origin, from: 'StyleSense <onboarding@resend.dev>', senderName: 'Test sender', production: false }, { model: new MockModel(), research: new MockResearch(), production: false }).listen(0, '127.0.0.1');
     await once(server, 'listening'); const address = server.address(); assert(address && typeof address !== 'string');
     vite = await createServer({ configFile: false, root: fileURLToPath(new URL('../../../web/', import.meta.url)), server: { host: '127.0.0.1', port: 5187, strictPort: true, proxy: { '/api': `http://127.0.0.1:${address.port}` } } });
     await vite.listen();
@@ -96,6 +97,19 @@ test('Connected console on a disposable PostgreSQL schema', { timeout: 180000 },
       await page.getByLabel('Status', { exact: true }).selectOption('DELIVERED'); await page.getByLabel('Minimum score').fill('35'); await button('Apply filters').click();
       await page.getByText('1 records · Page 1 of 1', { exact: true }).waitFor(); assert.match(await page.locator('tbody').innerText(), /Avery Example/);
       await button('Reset').click(); await button('Avery Example').click();
+    });
+    await t.test('discovery review imports one sourced fixture and reply review never sends', async () => {
+      await nav('Discovery').click(); await button('Run synthetic discovery').click(); await page.getByRole('heading', { name: 'Review discovered candidates', exact: true }).waitFor();
+      assert.equal(await button('Import synthetic lead').count(), 5);
+      await button('Import synthetic lead').first().click(); await button('Open imported lead').click();
+      await button('Evidence').click(); await page.getByRole('heading', { name: 'Imported research provenance', exact: true }).waitFor(); await page.getByText('Review field evidence · 6 facts', { exact: true }).click(); await page.getByText('Synthetic fixture ·', { exact: false }).first().waitFor();
+      await page.screenshot({ path: `${screenshots}/research-desktop.png`, fullPage: true });
+      await button('Replies').click(); await page.getByLabel('Simulated reply text').fill("Interested. Let's schedule a call."); await button('Classify simulated reply').click(); await button('Approve draft without sending').waitFor();
+      const messagesBefore = await db.emailMessage.count(); await page.getByLabel('Response draft for human review').fill('Thank you. What time works for a conversation?'); await button('Approve draft without sending').click(); await page.getByText('APPROVED', { exact: true }).waitFor(); assert.equal(await db.emailMessage.count(), messagesBefore);
+      await page.screenshot({ path: `${screenshots}/reply-desktop.png`, fullPage: true });
+      await page.getByLabel('Simulated reply text').fill('Please unsubscribe me.'); await button('Classify simulated reply').click(); await page.locator('.score-strip').getByText('UNSUBSCRIBED', { exact: true }).waitFor(); assert.equal(await button('Approve draft without sending').count(), 0);
+      await page.setViewportSize({ width: 390, height: 844 }); await page.screenshot({ path: `${screenshots}/reply-mobile.png`, fullPage: true }); assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+      await button('← All leads').click(); await button('Avery Example').click();
     });
     await t.test('mobile layout, logout and expiry remove private workspace', async () => {
       await page.setViewportSize({ width: 390, height: 844 }); await button('← All leads').click(); await button('Avery Example').waitFor();

@@ -19,7 +19,8 @@
     "db:migrate": "npm run db:migrate -w @stylesense/api",
     "user:create": "npm run user:create -w @stylesense/api",
     "test:integration": "npm run test:integration -w @stylesense/api",
-    "test:console": "npm run test:console -w @stylesense/api"
+    "test:console": "npm run test:console -w @stylesense/api",
+    "evaluate:replies": "npm run evaluate:replies -w @stylesense/api --"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

@@ -1,4 +1,6 @@
-# Step 3 API
+# Platform API
+
+Step 6 adds [discovery, research provenance, reply simulation and human review](ASSISTANCE.md). These routes share the authentication and ownership rules below.
 
 Base URL: `http://127.0.0.1:4100/api`. The Vite development proxy exposes the same `/api` paths on port 5180.
 

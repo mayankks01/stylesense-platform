@@ -2,6 +2,8 @@ import { createDatabase } from './db.js';
 import { createApp } from './app.js';
 import { readConfig } from './config.js';
 import { MockProvider, ResendProvider } from './email/provider.js';
+import { MockModel, MockResearch, OpenAIModel, TavilyResearch } from './ai/providers.js';
+import { fetchPublic } from './ai/network.js';
 
 const config = readConfig();
 const db = createDatabase(config.DATABASE_URL);
@@ -13,6 +15,10 @@ const app = createApp(async () => { await db.$queryRaw`SELECT 1`; }, db, {
   provider: config.EMAIL_MODE === 'resend' ? new ResendProvider(config.RESEND_API_KEY!) : new MockProvider(config.EMAIL_MOCK_FAILURE),
   publicBaseUrl: config.PUBLIC_BASE_URL.replace(/\/$/, ''), from: config.EMAIL_FROM, senderName: config.EMAIL_SENDER_NAME,
   proposedTimeWindow: config.EMAIL_PROPOSED_TIME_WINDOW, webhookSecret: config.RESEND_WEBHOOK_SECRET,
+  production: config.NODE_ENV === 'production',
+}, {
+  model: config.AI_MODE === 'openai' ? new OpenAIModel(config.OPENAI_API_KEY!, config.AI_MODEL!) : new MockModel(),
+  research: config.AI_MODE === 'openai' ? new TavilyResearch(config.TAVILY_API_KEY!, fetchPublic) : new MockResearch(),
   production: config.NODE_ENV === 'production',
 });
 const server = app.listen(config.PORT, config.HOST, () => {

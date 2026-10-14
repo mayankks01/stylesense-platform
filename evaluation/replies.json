@@ -1,0 +1,10 @@
+[
+  { "id": "r1", "text": "Yes, we are interested. Let's schedule a call.", "intent": "INTERESTED" },
+  { "id": "r2", "text": "The demo sounds good. Can we meet?", "intent": "INTERESTED" },
+  { "id": "r3", "text": "Please send details about the inventory planning workflow.", "intent": "NEEDS_INFO" },
+  { "id": "r4", "text": "How does this work with our current systems?", "intent": "NEEDS_INFO" },
+  { "id": "r5", "text": "Not now; there is no budget this quarter.", "intent": "NOT_NOW" },
+  { "id": "r6", "text": "We are not ready. Try us next year.", "intent": "NOT_NOW" },
+  { "id": "r7", "text": "You have the wrong person. This is not my responsibility.", "intent": "WRONG_PERSON" },
+  { "id": "r8", "text": "Please remove me from your list and stop emailing me.", "intent": "UNSUBSCRIBE" }
+]

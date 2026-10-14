@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { api, date, useResource, type Campaign, type Evidence, type Event, type History, type Lead, type Message, type Page, type Preview } from './api';
 import { Action, ActionForm, Badge, Empty, Feedback, Field, Json, Pager, Source, text } from './ui';
 import { LeadForm } from './forms';
+import { Replies, ResearchFacts } from './Assistance';
 
 const evidenceTokens = ['observed_signal_short', 'observed_signal_sentence', 'company_segment', 'pain_point_category', 'specific_context_detail', 'one_line_relevance_hypothesis', 'quantified_outcome_optional', 'optional_soft_proof_point'];
 export function LeadDetail({ id, back, changed }: { id: string; back: () => void; changed: () => void }) {
@@ -10,11 +11,11 @@ export function LeadDetail({ id, back, changed }: { id: string; back: () => void
   const reload = () => { refresh(n => n + 1); changed(); };
   if (!result.data) return <><button onClick={back}>← All leads</button><Feedback error={result.error} retry={result.retry} /></>;
   const lead = result.data.data;
-  return <><button className="back" onClick={back}>← All leads</button><div className="detail-heading"><div><p className="eyebrow">{lead.company.name}</p><h1>{lead.firstName} {lead.lastName}</h1><p className="muted">{lead.title ?? 'Title not recorded'} · {lead.email ?? 'Email not recorded'}</p></div><div className="score-large"><strong>{lead.score?.total ?? 0}</strong><span>lead score / 100</span></div></div><div className="score-strip"><Badge value={lead.score?.status ?? 'NEW'} /><span>Fit <strong>{lead.score?.fit ?? 0}</strong></span><span>Engagement <strong>{lead.score?.engagement ?? 0}</strong></span><Source url={lead.sourceUrl} /></div><nav className="tabs" aria-label="Lead details">{['Overview', 'Evidence', 'Outreach', 'Activity', 'Score history'].map(value => <button key={value} aria-current={tab === value ? 'page' : undefined} onClick={() => setTab(value)}>{value}</button>)}</nav>
+  return <><button className="back" onClick={back}>← All leads</button><div className="detail-heading"><div><p className="eyebrow">{lead.company.name}</p><h1>{lead.firstName} {lead.lastName}</h1><p className="muted">{lead.title ?? 'Title not recorded'} · {lead.email ?? 'Email not recorded'}</p></div><div className="score-large"><strong>{lead.score?.total ?? 0}</strong><span>lead score / 100</span></div></div><div className="score-strip"><Badge value={lead.score?.status ?? 'NEW'} /><span>Fit <strong>{lead.score?.fit ?? 0}</strong></span><span>Engagement <strong>{lead.score?.engagement ?? 0}</strong></span><Source url={lead.sourceUrl} /></div><nav className="tabs" aria-label="Lead details">{['Overview', 'Evidence', 'Outreach', 'Replies', 'Activity', 'Score history'].map(value => <button key={value} aria-current={tab === value ? 'page' : undefined} onClick={() => setTab(value)}>{value}</button>)}</nav>
   {tab === 'Overview' && <section className="panel"><h2>Contact & scoring profile</h2><LeadForm lead={lead} saved={reload} /></section>}
-  {tab === 'Evidence' && <EvidencePanel id={id} />}
+  {tab === 'Evidence' && <><ResearchFacts id={id} /><EvidencePanel id={id} /></>}
   {tab === 'Outreach' && <Outreach lead={lead} changed={reload} />}
-  {tab === 'Activity' && <Activity id={id} revision={revision} />}
+  {tab === 'Replies' && <Replies id={id} changed={reload} />}{tab === 'Activity' && <Activity id={id} revision={revision} />}
   {tab === 'Score history' && <ScoreHistory id={id} revision={revision} changed={reload} />}</>;
 }
 function EvidencePanel({ id }: { id: string }) {

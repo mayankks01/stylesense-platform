@@ -34,6 +34,7 @@ model User {
   companies Company[]
   campaigns Campaign[]
   suppressions Suppression[]
+  discoveries DiscoveryRun[]
 }
 
 model Session {
@@ -83,6 +84,11 @@ model Lead {
   enrollments CampaignLead[]
   outreachEvidence OutreachEvidence[]
   groundingLogs GroundingLog[]
+  researchFacts ResearchFact[]
+  discoveryCandidates DiscoveryCandidate[]
+  replies ReplyAnalysis[]
+  discoveryKey String? @db.VarChar(64)
+  @@unique([ownerId, discoveryKey])
   @@unique([id, ownerId])
   @@unique([ownerId, email])
   @@index([ownerId, createdAt, id])
@@ -163,6 +169,7 @@ model EmailEvent {
   receivedAt DateTime @default(now())
   payload Json
   history ScoreHistory[]
+  analysis ReplyAnalysis?
   @@unique([ownerId, source, dedupeKey])
   @@unique([id, leadId, ownerId])
   @@index([ownerId, leadId, occurredAt, id])
@@ -235,5 +242,82 @@ model GroundingLog {
   reason String
   action String
   createdAt DateTime @default(now())
+  @@index([ownerId, leadId, createdAt])
+}
+
+model DiscoveryRun {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  idempotencyKey String @db.VarChar(128)
+  requestHash String @db.VarChar(64)
+  icp Json
+  requested Int
+  provider String
+  model String
+  simulated Boolean
+  status String @default("RUNNING") @db.VarChar(20)
+  sources Json @default("[]")
+  trace Json @default("[]")
+  rejections Json @default("[]")
+  error String?
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  candidates DiscoveryCandidate[]
+  @@unique([id, ownerId])
+  @@unique([ownerId, idempotencyKey])
+  @@index([ownerId, createdAt])
+}
+
+model DiscoveryCandidate {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  runId String @db.Uuid
+  run DiscoveryRun @relation(fields: [runId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  fingerprint String @db.VarChar(64)
+  data Json
+  importedLeadId String? @db.Uuid
+  importedLead Lead? @relation(fields: [importedLeadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  @@unique([runId, fingerprint])
+  @@index([ownerId, runId])
+}
+
+model ResearchFact {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  leadId String @db.Uuid
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  field String
+  value String
+  sourceUrl String
+  excerpt String
+  fetchedAt DateTime
+  contentHash String @db.VarChar(64)
+  simulated Boolean
+  @@unique([leadId, field])
+}
+
+model ReplyAnalysis {
+  id String @id @default(uuid()) @db.Uuid
+  ownerId String @db.Uuid
+  leadId String @db.Uuid
+  lead Lead @relation(fields: [leadId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  eventId String @unique @db.Uuid
+  event EmailEvent @relation(fields: [eventId, leadId, ownerId], references: [id, leadId, ownerId], onDelete: Restrict)
+  @@unique([eventId, leadId, ownerId])
+  idempotencyKey String @db.VarChar(128)
+  requestHash String @db.VarChar(64)
+  text String
+  intent ReplyIntent
+  rationale String
+  draft String?
+  reviewedDraft String?
+  status String @db.VarChar(20)
+  provider String
+  model String
+  context Json
+  createdAt DateTime @default(now())
+  reviewedAt DateTime?
+  @@unique([ownerId, idempotencyKey])
   @@index([ownerId, leadId, createdAt])
 }
