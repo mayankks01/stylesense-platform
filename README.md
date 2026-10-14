@@ -1,7 +1,5 @@
 # StyleSense AI — Lead Generation & Outreach Platform
 
-Full-stack submission for the **ThinkDatax Full Stack + AI Engineer assignment**.
-
 StyleSense AI gives a salesperson one workflow to discover prospects, review source evidence, prepare grounded outreach, track engagement, classify replies, and prioritize leads. The application uses React, Node.js and PostgreSQL, with separate adapters for email delivery, LLM inference and web research.
 
 > **Review status:** The complete local workflow is implemented and tested using explicit mock providers. OpenAI/Tavily and Resend adapters are included, but live discovery, live classification accuracy and a real sandbox delivery callback have not been verified. The default demo requires no external API keys.
