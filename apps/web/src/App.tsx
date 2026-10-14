@@ -1,58 +1,50 @@
 import { useEffect, useState } from 'react';
-
-type Status = 'checking' | 'connected' | 'unavailable';
-async function check(path: string, signal: AbortSignal): Promise<Status> {
-  try {
-    const response = await fetch(path, { signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]) });
-    const body: unknown = await response.json();
-    return response.ok && typeof body === 'object' && body !== null && 'status' in body && body.status === 'ok' ? 'connected' : 'unavailable';
-  } catch { return 'unavailable'; }
-}
+import { api, ApiError, setSessionToken, useResource, type Session, type Lead, type Page, type Company, type Campaign } from './api';
+import { Action, ActionForm, Badge, Empty, Feedback, Field, Pager, Source, text } from './ui';
+import { CampaignForm, CompanyForm, LeadForm } from './forms';
+import { LeadDetail, Messages } from './LeadDetail';
 
 export function App() {
-  const [attempt, setAttempt] = useState(0);
-  const [api, setApi] = useState<Status>('checking');
-  const [database, setDatabase] = useState<Status>('checking');
+  const [session, setSession] = useState<Session | null>(null); const [checking, setChecking] = useState(true); const [error, setError] = useState(''); const [attempt, retry] = useState(0);
+  function signedIn(value: Session) { setSessionToken(value.csrfToken); setSession(value); setError(''); }
   useEffect(() => {
-    const controller = new AbortController();
-    setApi('checking'); setDatabase('checking');
-    void Promise.all([check('/api/health', controller.signal), check('/api/ready', controller.signal)]).then(([a, d]) => {
-      if (!controller.signal.aborted) { setApi(a); setDatabase(d); }
-    });
+    const controller = new AbortController(); setChecking(true); setError('');
+    void api<Session>('/auth/me', { signal: controller.signal }).then(value => { if (!controller.signal.aborted) signedIn(value); }).catch((e: Error) => { if (!controller.signal.aborted && !(e instanceof ApiError && e.status === 401)) setError(e.message); }).finally(() => { if (!controller.signal.aborted) setChecking(false); });
     return () => controller.abort();
   }, [attempt]);
-  const checking = api === 'checking' || database === 'checking';
-  return (
-    <div className="layout">
-      <aside className="sidebar">
-        <a className="brand" href="/" aria-label="StyleSense AI home"><span className="brand-mark">S</span><span>StyleSense <small>AI</small></span></a>
-        <div className="sidebar-label">SALES WORKSPACE</div>
-        <nav aria-label="Workspace"><a className="active" href="#overview" aria-current="page"><span>◈</span> Overview</a></nav>
-        <div className="sidebar-foot"><span className="dot" /> Local workspace<small>Foundation · Step 2 of 7</small></div>
-      </aside>
-      <main id="overview">
-        <header><span>Workspace <span className="slash">/</span> Overview</span><span className="badge">Development</span></header>
-        <section className="intro"><p className="eyebrow">A MORE THOUGHTFUL WAY TO PROSPECT</p><h1>Your next conversation<br />starts here.</h1><p>Discover the right fashion brands. Reach out with context.<br className="desktop-break" /> Keep every opportunity in view.</p></section>
-        <section className="connection" aria-labelledby="connection-title">
-          <div><h2 id="connection-title">Workspace connection</h2><p>Live checks for your local services.</p></div>
-          <div className="service-status" role="status" aria-live="polite"><StatusPill name="API" value={api} /><StatusPill name="Database" value={database} /></div>
-          <button onClick={() => setAttempt(value => value + 1)} disabled={checking}>{checking ? 'Checking…' : 'Check again'}</button>
-        </section>
-        {(api === 'unavailable' || database === 'unavailable') && <p className="notice" role="alert">{api === 'unavailable' ? 'The API is not responding. Start the application services and check again.' : 'The API is online, but the database is unavailable. Start PostgreSQL and check the database configuration.'}</p>}
-        <section className="pipeline" aria-labelledby="pipeline-title"><div className="section-heading"><h2 id="pipeline-title">From discovery to conversation</h2><span>Your workflow, taking shape</span></div><div className="cards">
-          <Feature number="01" title="Find your fit" text="Discover prospects from your ideal customer profile, backed by research." tag="Discovery" />
-          <Feature number="02" title="Make it relevant" text="Prepare grounded outreach and follow the signals that matter." tag="Campaigns" />
-          <Feature number="03" title="Know who’s ready" text="Turn engagement into a ranked list of your next best conversations." tag="Lead scoring" />
-        </div></section>
-        <section className="empty"><div className="empty-icon" aria-hidden="true">↗</div><h2>A fresh start for your pipeline</h2><p>The workspace foundation is ready. Lead management and authentication<br className="desktop-break" /> arrive in Step 3; your connected sales console follows in Step 5.</p><span className="empty-tag">No lead data connected yet</span></section>
-        <footer>STYLESENSE AI<span>Built for better fashion decisions.</span></footer>
-      </main>
-    </div>
-  );
+  useEffect(() => {
+    const expired = () => { setSession(null); setSessionToken(''); };
+    window.addEventListener('session-expired', expired);
+    const timer = session ? window.setTimeout(expired, Math.max(0, Date.parse(session.expiresAt) - Date.now())) : undefined;
+    return () => { window.removeEventListener('session-expired', expired); window.clearTimeout(timer); };
+  }, [session]);
+  if (checking) return <div className="auth-page"><div className="auth-card"><Brand /><Feedback /></div></div>;
+  if (!session) return <div className="auth-page"><div className="auth-story"><Brand /><p className="eyebrow">BETTER CONTEXT. BETTER CONVERSATIONS.</p><h1>Find the fit.<br />Start a conversation.</h1><p>A thoughtful workspace for fashion prospecting.<br />Research, outreach, and the signals that matter.</p><div className="auth-art" aria-hidden="true"><span>01 / Discover</span><span>02 / Connect</span><span>03 / Prioritize</span></div></div><div className="auth-card"><p className="eyebrow">YOUR SALES WORKSPACE</p><h2>Welcome back.</h2><p className="muted">Sign in to your StyleSense account.</p>{error && <Feedback error={error} retry={() => retry(n => n + 1)} />}<ActionForm submit="Sign in" action={async data => signedIn(await api<Session>('/auth/login', { method: 'POST', body: { email: text(data, 'email'), password: String(data.get('password') ?? '') } }))}><Field label="Email address"><input name="email" type="email" autoComplete="username" required /></Field><Field label="Password"><input name="password" type="password" autoComplete="current-password" maxLength={128} required /></Field></ActionForm><p className="hint">Accounts are provisioned by your workspace administrator. There is no public registration.</p></div></div>;
+  return <Workspace key={session.user.id} session={session} logout={() => { setSession(null); setSessionToken(''); }} />;
 }
-function StatusPill({ name, value }: { name: string; value: Status }) {
-  return <span className={`status ${value}`}><span className="dot" />{name}: {value}</span>;
+function Brand() { return <a className="brand" href="/" aria-label="StyleSense AI home"><span className="brand-mark">S</span><span>StyleSense <small>AI</small></span></a>; }
+function Workspace({ session, logout }: { session: Session; logout: () => void }) {
+  const [view, setView] = useState('Leads'); const [leadId, setLeadId] = useState<string | null>(null); const [revision, refresh] = useState(0);
+  const changed = () => refresh(n => n + 1);
+  const openLead = (id: string) => { setView('Leads'); setLeadId(id); window.scrollTo(0, 0); };
+  return <div className="layout"><aside className="sidebar"><Brand /><p className="sidebar-label">SALES WORKSPACE</p><nav aria-label="Workspace">{['Leads', 'Companies', 'Campaigns', 'Messages'].map((item, i) => <button key={item} aria-current={view === item ? 'page' : undefined} onClick={() => { setView(item); setLeadId(null); }}><span aria-hidden="true">{['◈', '▦', '↗', '✉'][i]}</span>{item}</button>)}</nav><div className="sidebar-foot"><span className="avatar">{session.user.name.slice(0, 1)}</span><div>{session.user.name}<small>Private workspace</small></div></div></aside><main><header><span>Workspace <span className="slash">/</span> {view}</span><Action run={async () => { await api('/auth/logout', { method: 'POST', body: {} }); logout(); }}>Sign out</Action></header>{leadId ? <LeadDetail key={leadId} id={leadId} back={() => setLeadId(null)} changed={changed} /> : <><section className="intro"><p className="eyebrow">YOUR NEXT CONVERSATION STARTS HERE</p><h1>{view === 'Leads' ? 'A clearer view of opportunity.' : view === 'Companies' ? 'Know the brands behind the names.' : view === 'Campaigns' ? 'Outreach with a purpose.' : 'Every message, in context.'}</h1><p>{view === 'Leads' ? 'Research-backed contacts, ranked by fit and engagement.' : view === 'Companies' ? 'Keep company facts and their sources together.' : view === 'Campaigns' ? 'Define your audience and build relevant conversations.' : 'Review prepared drafts and follow their submission status.'}</p></section>{view === 'Leads' && <Leads revision={revision} changed={changed} open={openLead} />}{view === 'Companies' && <Companies />}{view === 'Campaigns' && <Campaigns openLead={openLead} />}{view === 'Messages' && <Messages changed={changed} />}</>}<footer>STYLESENSE AI<span>Built for better fashion decisions.</span></footer></main></div>;
 }
-function Feature({ number, title, text, tag }: { number: string; title: string; text: string; tag: string }) {
-  return <article className="card"><span className="step">{number}</span><span className="tag">{tag}</span><h3>{title}</h3><p>{text}</p><span className="planned">Planned for an upcoming step</span></article>;
+function Leads({ revision, changed, open }: { revision: number; changed: () => void; open: (id: string) => void }) {
+  const [page, setPage] = useState(1); const [filters, setFilters] = useState(''); const [create, setCreate] = useState(false);
+  const result = useResource<Page<Lead>>(`/leads?page=${page}&limit=10${filters}`, revision);
+  return <><div className="section-heading"><h2>Your leads <span className="count">{result.data?.pagination.total ?? '—'}</span></h2><div className="actions"><button onClick={result.retry}>Refresh leads</button><button className="primary" onClick={() => setCreate(value => !value)}>{create ? 'Cancel' : '+ Add lead'}</button></div></div>{create && <section className="panel"><h2>Add a sourced lead</h2><LeadForm saved={() => { setCreate(false); changed(); }} /></section>}<section className="panel lead-panel"><form className="filters" onSubmit={e => { e.preventDefault(); const data = new FormData(e.currentTarget); const query = new URLSearchParams(); for (const key of ['search', 'status', 'minScore']) if (text(data, key)) query.set(key, text(data, key)); setFilters(query.size ? `&${query}` : ''); setPage(1); }}><Field label="Search contacts"><input name="search" type="search" placeholder="Name, email or job title" maxLength={100} /></Field><Field label="Status"><select name="status"><option value="">All statuses</option>{['NEW', 'SENT', 'DELIVERED', 'OPENED', 'REPLIED', 'UNSUBSCRIBED'].map(value => <option key={value}>{value}</option>)}</select></Field><Field label="Minimum score"><input name="minScore" type="number" min="0" max="100" placeholder="0" /></Field><button type="submit">Apply filters</button><button type="reset" onClick={() => { setFilters(''); setPage(1); }}>Reset</button></form><div className="table-caption"><span>Ranked by score · highest first</span><span>Fit + engagement / 100</span></div>{!result.data ? <Feedback error={result.error} retry={result.retry} /> : <>{!result.data.data.length ? <Empty title={filters ? 'No leads match these filters' : 'Your pipeline starts with a person'}>{filters ? 'Reset or adjust your filters to see more contacts.' : 'Add a company, then a sourced lead. Every score will come from your recorded data.'}</Empty> : <div className="table-wrap"><table><thead><tr><th>Contact</th><th>Company</th><th>Status</th><th>Score</th><th><span className="sr-only">Open lead</span></th></tr></thead><tbody>{result.data.data.map(lead => <tr key={lead.id}><td><button className="contact-link" onClick={() => open(lead.id)}>{lead.firstName} {lead.lastName}</button><small>{lead.title ?? 'Title not recorded'}</small></td><td>{lead.company.name}<small>{lead.company.region ?? 'Region not recorded'}</small></td><td><Badge value={lead.score?.status ?? 'NEW'} /></td><td><div className="score-cell"><strong>{lead.score?.total ?? 0}</strong><span className="score-bar"><i style={{ width: `${lead.score?.total ?? 0}%` }} /></span></div></td><td><button aria-label={`Open ${lead.firstName} ${lead.lastName}`} onClick={() => open(lead.id)}>↗</button></td></tr>)}</tbody></table></div>}<Pager pagination={result.data.pagination} change={setPage} /></>}</section></>;
+}
+function Companies() {
+  const [page, setPage] = useState(1); const [revision, refresh] = useState(0); const [editing, setEditing] = useState<Company | 'new' | null>(null);
+  const result = useResource<Page<Company>>(`/companies?page=${page}&limit=10`, revision);
+  return <><div className="section-heading"><h2>Company directory</h2><button className="primary" onClick={() => setEditing(editing ? null : 'new')}>{editing ? 'Cancel' : '+ Add company'}</button></div>{editing && <section className="panel"><h2>{editing === 'new' ? 'Add company' : `Edit ${editing.name}`}</h2><CompanyForm key={editing === 'new' ? 'new' : editing.id} company={editing === 'new' ? undefined : editing} saved={() => { setEditing(null); refresh(n => n + 1); }} /></section>}{!result.data ? <Feedback error={result.error} retry={result.retry} /> : <section className="panel">{!result.data.data.length && <Empty title="Start with a brand">Add sourced company details to support your first lead.</Empty>}<div className="company-grid">{result.data.data.map(company => <article className="company-card" key={company.id}><h3>{company.name}</h3><p>{company.domain}</p><p className="muted">{company.industry ?? 'Unknown industry'} · {company.region ?? 'Unknown region'}</p><p className="hint">{company.size ? `${company.size.toLocaleString()} employees` : 'Size not recorded'}</p><div className="actions"><Source url={company.sourceUrl} /><button onClick={() => setEditing(company)}>Edit company</button></div></article>)}</div><Pager pagination={result.data.pagination} change={setPage} /></section>}</>;
+}
+function Campaigns({ openLead }: { openLead: (id: string) => void }) {
+  const [page, setPage] = useState(1); const [revision, refresh] = useState(0); const [editing, setEditing] = useState<Campaign | 'new' | null>(null); const [selected, setSelected] = useState<Campaign | null>(null);
+  const result = useResource<Page<Campaign>>(`/campaigns?page=${page}&limit=10`, revision);
+  return <><div className="section-heading"><h2>Campaigns</h2><button className="primary" onClick={() => setEditing(editing ? null : 'new')}>{editing ? 'Cancel' : '+ New campaign'}</button></div>{editing && <section className="panel"><h2>{editing === 'new' ? 'New campaign' : 'Edit campaign'}</h2><CampaignForm key={editing === 'new' ? 'new' : editing.id} campaign={editing === 'new' ? undefined : editing} saved={() => { setEditing(null); setSelected(null); refresh(n => n + 1); }} /></section>}{!result.data ? <Feedback error={result.error} retry={result.retry} /> : <section className="panel">{!result.data.data.length && <Empty title="Make your first campaign">Define its purpose, then enroll contacts from their Outreach tab.</Empty>}{result.data.data.map(campaign => <article className="campaign-row" key={campaign.id}><div><h3>{campaign.name}</h3><p className="muted">{campaign.description || 'No description yet.'}</p><span className="hint">{campaign._count?.leads ?? 0} enrolled leads</span></div><div className="actions"><button onClick={() => setSelected(campaign)}>View members</button><button onClick={() => setEditing(campaign)}>Edit campaign</button></div></article>)}<Pager pagination={result.data.pagination} change={setPage} /></section>}{selected && <Members key={selected.id} campaign={selected} openLead={openLead} />}</>;
+}
+function Members({ campaign, openLead }: { campaign: Campaign; openLead: (id: string) => void }) {
+  const [page, setPage] = useState(1); const result = useResource<Page<{ lead: Lead }>>(`/campaigns/${campaign.id}/leads?page=${page}&limit=10`);
+  return <section className="panel"><h2>{campaign.name} · Members</h2>{!result.data ? <Feedback error={result.error} retry={result.retry} /> : <>{!result.data.data.length && <Empty title="No members yet">Open a lead and use Outreach to enroll them.</Empty>}{result.data.data.map(({ lead }) => <div className="campaign-row" key={lead.id}><span>{lead.firstName} {lead.lastName} · {lead.company.name}</span><button onClick={() => openLead(lead.id)}>Open lead</button></div>)}<Pager pagination={result.data.pagination} change={setPage} /></>}</section>;
 }

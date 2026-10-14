@@ -57,7 +57,7 @@ All routes below use the existing session, Origin and CSRF rules from [API.md](A
 | POST | `/api/messages/:id/send` | Explicitly approve submission of this message; body `{}`. |
 | POST | `/api/messages/:id/simulate-delivery` | Local mock mode only; record one clearly labelled delivery simulation. |
 
-Preview returns plaintext without a pixel. Message HTML contains functional tracking/unsubscribe capabilities; keep it private to the owner. The future console should render previews as text rather than execute stored message HTML. Public capability tokens are not authentication sessions and reveal no unrelated lead data.
+Preview returns plaintext without a pixel. Message HTML contains functional tracking/unsubscribe capabilities; keep it private to the owner. The connected console renders previews and stored message bodies as text, without executing stored HTML or loading tracking pixels. Public capability tokens are not authentication sessions and reveal no unrelated lead data.
 
 ## Idempotency and failures
 

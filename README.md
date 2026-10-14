@@ -4,7 +4,7 @@ An incremental implementation of the ThinkDatax Full Stack + AI Engineer assignm
 
 ## Current status
 
-Steps 1–4 are implemented and locally verified, including email rendering, sandbox provider integration, tracking and unsubscribe. A live Resend send and public callback remain unverified pending provider configuration; see [Step 4](docs/STEP4.md). The sales UI is still the Step 2 shell; login screens and the connected console arrive in Step 5. No deployment exists yet.
+Steps 1–5 are implemented and locally verified. The connected React console includes sign-in, company and lead management, ranked filters, campaigns, grounded outreach, and event/score history. A live Resend send and public callback remain unverified pending provider configuration; see [Step 4](docs/STEP4.md). No deployment exists yet.
 
 - [Requirements and acceptance criteria](docs/REQUIREMENTS.md)
 - [Architecture and staged build plan](docs/BUILD_PLAN.md)
@@ -14,8 +14,9 @@ Steps 1–4 are implemented and locally verified, including email rendering, san
 - [Scoring weights and replay](docs/SCORING.md)
 - [Email setup, grounding and tracking](docs/EMAIL.md)
 - [Step 4 verification and GitHub commands](docs/STEP4.md)
+- [Step 5 console guide, browser verification and GitHub commands](docs/STEP5.md)
 
-The next step is the connected React sales console. Each stage ends with verification notes and Git commit instructions, followed by a pause for review.
+The next step is tool-based lead discovery and reply assistance. Each stage ends with verification notes and Git commit instructions, followed by a pause for review.
 
 ## Run locally (PowerShell)
 

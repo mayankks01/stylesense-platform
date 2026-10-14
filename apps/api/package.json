@@ -12,7 +12,8 @@
     "db:generate": "node --env-file=.env ../../node_modules/prisma/build/index.js generate",
     "db:migrate": "node --env-file=.env ../../node_modules/prisma/build/index.js migrate deploy",
     "user:create": "tsx --env-file=.env src/bootstrap.ts",
-    "test:integration": "tsx --env-file=.env --test test/integration/run.ts test/integration/email.ts"
+    "test:integration": "tsx --env-file=.env --test test/integration/run.ts test/integration/email.ts",
+    "test:console": "tsx --env-file=.env --test test/integration/console.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
@@ -28,7 +29,9 @@
     "@types/express": "^5.0.3",
     "@types/node": "^22.18.0",
     "@types/pg": "^8.15.5",
+    "playwright": "^1.58.2",
     "prisma": "^7.10.0",
-    "tsx": "^4.20.6"
+    "tsx": "^4.20.6",
+    "vite": "^7.3.7"
   }
 }
