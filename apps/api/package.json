@@ -14,7 +14,8 @@
     "user:create": "tsx --env-file=.env src/bootstrap.ts",
     "test:integration": "tsx --env-file=.env --test test/integration/run.ts test/integration/email.ts test/integration/assistance.ts",
     "test:console": "tsx --env-file=.env --test test/integration/console.ts",
-    "evaluate:replies": "tsx --env-file=.env src/ai/evaluate.ts"
+    "evaluate:replies": "tsx --env-file=.env src/ai/evaluate.ts",
+    "examples:emails": "tsx src/email/examples.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

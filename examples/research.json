@@ -1,0 +1,29 @@
+[
+  {
+    "companyName": "NIKE", "firstName": "Elliott", "lastName": "Hill",
+    "leadSourceUrl": "https://about.nike.com/en/company/people/elliott-hill",
+    "companySourceUrl": "https://investors.nike.com/sec-filings/all-sec-filings/content/0000320187-26-000193/0000320187-26-000193.pdf",
+    "sourceTitle": "NIKE Form 10-Q, quarter ended August 31, 2026, marketplace discussion",
+    "signal": "increased markdowns across NIKE Direct",
+    "excerpt": "liquidating inventory through increased markdowns across NIKE Direct",
+    "reviewedOn": "2026-10-14"
+  },
+  {
+    "companyName": "adidas", "firstName": "Bjørn", "lastName": "Gulden",
+    "leadSourceUrl": "https://www.adidas-group.com/en/about/executive-board",
+    "companySourceUrl": "https://www.adidas-group.com/en/media/press-releases/adidas-reports-record-revenues-for-2025-and-expects-strong-sales-and-profit-growth-to-continue-over-the-next-years",
+    "sourceTitle": "adidas full-year 2025 results announcement",
+    "signal": "record revenues for 2025",
+    "excerpt": "adidas reports record revenues for 2025",
+    "reviewedOn": "2026-10-14"
+  },
+  {
+    "companyName": "Inditex", "firstName": "Óscar", "lastName": "García Maceiras",
+    "leadSourceUrl": "https://static.inditex.com/annualreport2024/en/ceo-statement",
+    "companySourceUrl": "https://static.inditex.com/annualreport2024/en/ceo-statement",
+    "sourceTitle": "Inditex Annual Report 2024, CEO statement (historical context)",
+    "signal": "2024-2025 logistics expansion plan",
+    "excerpt": "We are executing our 2024-2025 logistics expansion plan",
+    "reviewedOn": "2026-10-14"
+  }
+]

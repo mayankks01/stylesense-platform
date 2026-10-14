@@ -20,7 +20,9 @@
     "user:create": "npm run user:create -w @stylesense/api",
     "test:integration": "npm run test:integration -w @stylesense/api",
     "test:console": "npm run test:console -w @stylesense/api",
-    "evaluate:replies": "npm run evaluate:replies -w @stylesense/api --"
+    "evaluate:replies": "npm run evaluate:replies -w @stylesense/api --",
+    "examples:emails": "npm run examples:emails -w @stylesense/api --",
+    "verify": "npm run typecheck && npm test && npm run test:integration && npm run test:console && npm run build && npm run examples:emails -- --check && npm run evaluate:replies"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

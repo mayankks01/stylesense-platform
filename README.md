@@ -4,7 +4,7 @@ An incremental implementation of the ThinkDatax Full Stack + AI Engineer assignm
 
 ## Current status
 
-Steps 1–6 are implemented and locally verified. The connected React console includes sign-in, company/lead management, ranked filters, campaigns, grounded outreach, research discovery, reply simulation/review, and event/score history. Live real-lead discovery and LLM evaluation require OpenAI/Tavily configuration; mock evaluation measured 8/8 on eight smoke examples, not production accuracy. A live Resend send and public callback also remain unverified. See [Step 6](docs/STEP6.md) for the verification limits. No deployment exists yet.
+Steps 1–7 have local implementation and submission documentation. The connected React console includes sign-in, company/lead management, ranked filters, campaigns, grounded outreach, research discovery, reply simulation/review, and event/score history. Live real-lead discovery and LLM evaluation require OpenAI/Tavily configuration; mock evaluation measured 8/8 on eight smoke examples, not production accuracy. A live Resend send and public callback also remain unverified. See [Step 7](docs/STEP7.md) for actual verification and outstanding acceptance gates. No deployment or demo recording exists yet.
 
 - [Requirements and acceptance criteria](docs/REQUIREMENTS.md)
 - [Architecture and staged build plan](docs/BUILD_PLAN.md)
@@ -18,7 +18,10 @@ Steps 1–6 are implemented and locally verified. The connected React console in
 - [Discovery and reply setup/API](docs/ASSISTANCE.md)
 - [Step 6 verification, evaluation and GitHub commands](docs/STEP6.md)
 
-The next step is final lifecycle verification and the submission package. Each stage ends with verification notes and Git commit instructions, followed by a pause for review.
+- [Three researched email examples](examples/EMAILS.md) and [reproducible source inputs](examples/research.json)
+- [3–5 minute demo recording guide](docs/DEMO.md)
+- [Deployment preparation and operational limits](docs/DEPLOYMENT.md)
+- [Step 7 verification and GitHub commands](docs/STEP7.md)
 
 ## Run locally (PowerShell)
 
@@ -58,11 +61,11 @@ Create your own account by privately adding `BOOTSTRAP_EMAIL`, `BOOTSTRAP_NAME`,
 
 The integration test uses a unique disposable PostgreSQL schema and removes it after verification. It exercises authentication, ownership constraints, event deduplication, replay, suppression and score history without modifying application data.
 
-Stop the app with Ctrl+C. Stop this project's database without deleting its data with `npm run db:stop`. The generated frontend is in `apps/web/dist`; the compiled API is in `apps/api/dist`. `npm run start -w @stylesense/api` runs the compiled API. Production hosting and frontend serving are deferred to Step 7.
+Stop the app with Ctrl+C. Stop this project's database without deleting its data with `npm run db:stop`. The generated frontend is in `apps/web/dist`; the compiled API is in `apps/api/dist`. `npm run start -w @stylesense/api` runs the compiled API. See [deployment preparation](docs/DEPLOYMENT.md) for same-origin HTTPS hosting and release steps.
 
 On Windows, if PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`; no execution-policy change is necessary.
 
-## Planned stack
+## Architecture
 
 React with TypeScript and Vite for the console; Node.js with TypeScript and Express for the REST API; PostgreSQL with Prisma 7 migrations and the PostgreSQL driver adapter for relational storage. A single TypeScript language across the application reduces switching overhead. Database-backed cookie sessions protect application data. The Prisma setup follows its [client configuration](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) and [PostgreSQL adapter](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/postgresql) documentation. External email, search, and LLM services will sit behind interfaces with explicit mock modes.
 
@@ -76,6 +79,18 @@ Step 4 defaults to explicit mock email mode and restricts the Resend adapter to 
 - Treat submission instructions in the PDF as deliverable context; this project does not automatically email the assignment reviewer.
 - Keep secrets in environment variables and never commit credentials, real lead exports, or private email content.
 
-## Documentation to complete as implementation lands
+## Verification and scoring
 
-Run commands, actual environment variable names, scoring configuration, API documentation, tests, measured classification accuracy, three research-grounded email examples, known limitations, and a 3–5 minute demo guide will be added in the relevant stages. No unrun evaluation result or simulated provider delivery will be presented as real.
+Fit awards 20 for industry, 10 for region, 15 for size, and 15 for title matches. Engagement adds 10 for any open, then the latest reply contributes interested +30, needs info +20, not now 0, or wrong person −20. Total is clamped to 0–100; unsubscribe forces zero permanently. Unknown fit values earn nothing. [Scoring details and replay](docs/SCORING.md) explain event order and configuration versioning.
+
+With PostgreSQL running and migrations generated, run the full local check:
+
+```powershell
+$env:BROWSER_CHANNEL = 'msedge'
+npm run verify
+Remove-Item Env:BROWSER_CHANNEL
+```
+
+Alternatively install Playwright Chromium with `npx playwright install chromium` and omit `BROWSER_CHANNEL`. Verification stops at the first failure and includes typechecks, unit/API tests, database integration, browser lifecycle, builds, sample-email freshness and the mock reply evaluation. It uses temporary database schemas, not application records. `npm run examples:emails` regenerates the three unsent emails from reviewed public-source excerpts with the actual template renderer. `npm run evaluate:replies -- --live` runs the separate provider-backed evaluation when configured.
+
+The mock result is 8/8 on eight labelled smoke examples ([recorded matrix](evaluation/mock-results.json)); this is not a held-out benchmark. [Step 7](docs/STEP7.md) distinguishes local proof from the outstanding live discovery, provider callback, recording and deployment work.

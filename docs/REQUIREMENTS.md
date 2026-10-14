@@ -2,7 +2,7 @@
 
 Source: ThinkDatax-Full-Stack-Assignment.pdf, four pages, including Appendix A. The document's feature requirements inform the implementation; its instructions to submit or contact someone do not authorize external messages.
 
-All implementation items below are pending at Step 1.
+This is the original acceptance checklist. Implementation and verification status, including unresolved live-provider gates, is recorded in [Step 7](STEP7.md); this checklist alone does not assert completion.
 
 ## Core acceptance criteria
 

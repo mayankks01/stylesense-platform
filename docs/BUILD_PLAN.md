@@ -1,6 +1,6 @@
 # Staged build plan
 
-Steps 1 through 6 are implemented and locally verified. See [Step 6](STEP6.md) for discovery, reply review and evaluation. Live real-lead discovery, LLM evaluation, and Resend send/public callback checks remain pending provider configuration. Stop after each step, report verification and limitations, provide GitHub commands, and await the user's instruction to continue. Do not deploy during an intermediate stage.
+Steps 1 through 7 have local implementation and documentation. See [Step 7](STEP7.md) for final verification, researched samples, demo guide and deployment preparation. Live real-lead discovery, LLM evaluation, and Resend send/public callback checks remain pending provider configuration. Recording and deployment have not been performed. Stop after each step, report verification and limitations, provide GitHub commands, and await the user's instruction to continue.
 
 | Step | Deliverable | Verification before pausing | Suggested commit |
 | --- | --- | --- | --- |

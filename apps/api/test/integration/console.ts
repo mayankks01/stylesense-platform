@@ -98,14 +98,26 @@ test('Connected console on a disposable PostgreSQL schema', { timeout: 180000 },
       await page.getByText('1 records · Page 1 of 1', { exact: true }).waitFor(); assert.match(await page.locator('tbody').innerText(), /Avery Example/);
       await button('Reset').click(); await button('Avery Example').click();
     });
-    await t.test('discovery review imports one sourced fixture and reply review never sends', async () => {
+    await t.test('full mock lifecycle: discovery, import, send, delivery, open, reply, approval, ranking and opt-out', async () => {
       await nav('Discovery').click(); await button('Run synthetic discovery').click(); await page.getByRole('heading', { name: 'Review discovered candidates', exact: true }).waitFor();
       assert.equal(await button('Import synthetic lead').count(), 5);
       await button('Import synthetic lead').first().click(); await button('Open imported lead').click();
       await button('Evidence').click(); await page.getByRole('heading', { name: 'Imported research provenance', exact: true }).waitFor(); await page.getByText('Review field evidence · 6 facts', { exact: true }).click(); await page.getByText('Synthetic fixture ·', { exact: false }).first().waitFor();
       await page.screenshot({ path: `${screenshots}/research-desktop.png`, fullPage: true });
+      const imported = await db.lead.findFirstOrThrow({ where: { discoveryKey: { not: null } } });
+      await button('Outreach').click(); await button('QA outreach').click(); await button('Enroll lead in this campaign').click(); await page.getByText('Lead enrolled.', { exact: true }).waitFor();
+      await button('Preview email').click(); await button('Prepare immutable draft').click(); await button('Review & send').click(); await button('Confirm mock send').click(); await page.getByText('ACCEPTED', { exact: true }).waitFor();
+      await button('Simulate mock delivery').click(); await button('Activity').click(); await page.getByText('DELIVERED', { exact: true }).last().waitFor();
+      const sent = await db.emailMessage.findFirstOrThrow({ where: { leadId: imported.id } });
+      const pixel = new URL(sent.html.match(/src="([^"]+)"/)![1]!);
+      assert.equal((await page.request.get(origin + pixel.pathname)).status(), 200);
+      assert.equal(await db.emailEvent.count({ where: { leadId: imported.id, type: 'OPENED' } }), 1);
       await button('Replies').click(); await page.getByLabel('Simulated reply text').fill("Interested. Let's schedule a call."); await button('Classify simulated reply').click(); await button('Approve draft without sending').waitFor();
       const messagesBefore = await db.emailMessage.count(); await page.getByLabel('Response draft for human review').fill('Thank you. What time works for a conversation?'); await button('Approve draft without sending').click(); await page.getByText('APPROVED', { exact: true }).waitFor(); assert.equal(await db.emailMessage.count(), messagesBefore);
+      const scored = await db.leadScore.findUniqueOrThrow({ where: { leadId: imported.id } });
+      assert.equal(scored.total, scored.fit + 40);
+      await button('← All leads').click(); assert.match(await page.locator('tbody tr').first().innerText(), new RegExp(imported.firstName));
+      await button(`${imported.firstName} ${imported.lastName}`).click(); await button('Replies').click(); await page.getByText('APPROVED', { exact: true }).waitFor();
       await page.screenshot({ path: `${screenshots}/reply-desktop.png`, fullPage: true });
       await page.getByLabel('Simulated reply text').fill('Please unsubscribe me.'); await button('Classify simulated reply').click(); await page.locator('.score-strip').getByText('UNSUBSCRIBED', { exact: true }).waitFor(); assert.equal(await button('Approve draft without sending').count(), 0);
       await page.setViewportSize({ width: 390, height: 844 }); await page.screenshot({ path: `${screenshots}/reply-mobile.png`, fullPage: true }); assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
