@@ -4,6 +4,12 @@ StyleSense AI gives a salesperson one workflow to discover prospects, review sou
 
 > **Review status:** The complete local workflow is implemented and tested using explicit mock providers. OpenAI/Tavily and Resend adapters are included, but live discovery, live classification accuracy and a real sandbox delivery callback have not been verified. The default demo requires no external API keys.
 
+## Video Demo
+
+Watch the walkthrough covering lead discovery, outreach, tracking, reply classification, and score updates.
+
+[▶ Watch the project demo](https://drive.google.com/file/d/12sf0No7heXlVLy-hldy7jitadqb1UeHz/view?usp=sharing)
+
 ## Features
 
 - **Lead and campaign management:** sourced company/contact records, ICP criteria, campaign enrollment, pagination and filtering.
