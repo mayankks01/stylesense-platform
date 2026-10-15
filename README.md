@@ -118,8 +118,6 @@ Stop the app with Ctrl+C and stop PostgreSQL with `npm run db:stop`. Database st
 5. In **Replies**, enter an interested response, inspect the classification, edit the draft and approve it without sending. Return to the ranked list and inspect the changed score and history.
 6. Simulate an unsubscribe reply and verify suppression and a zero score.
 
-The [lifecycle demo guide](docs/DEMO.md) also describes an explicit tracking-pixel request and a 3–5 minute recording sequence. The browser test exercises the full same-lead lifecycle, including the pixel endpoint, ranking and suppression. Synthetic discovery uses fixed fixtures; it does not find real prospects or establish live ICP matching quality.
-
 ## Scoring
 
 Weights are centralized in [`config/scoring.json`](config/scoring.json).
